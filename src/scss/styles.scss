@@ -56,28 +56,38 @@ html {
 
 .subpages {
     position: absolute;
-    z-index: 5;
-    width: 40vw;
-    height: 28.726vw;
+    // z-index: 5;
+    z-index: 4;
+    width: 75vw;
+    height: 45vw;
     cursor: pointer;
 }
 
 #subPage1 {
-    top: 0px;
-    left: 0px;
+    top: 2vw;
+    left: 2vw;
 }
 
 #subPage2 {
-    top: 0px;
-    right: 0px;
+    top: 67vw;
+    right: 2vw;
 }
 
 #subPage3 {
-    top: 43.149vw;
-    right: 0px;
+    top: 130vw;
+    left: 2vw;
 }
 
 #subPage4 {
-    top: 43.149vw;
+    top: 185vw;
+    right: 2vw;
+}
+
+#orientationbtn {
+    position: absolute;
+    z-index: 3.5;
+    width: 100vw;
+    height: 216vw;
+    top: 0px;
     left: 0px;
 }

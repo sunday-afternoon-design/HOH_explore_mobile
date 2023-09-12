@@ -9,12 +9,10 @@ document.addEventListener("DOMContentLoaded", function() {
     /* -------------------------------------------------------------------------- */
     /* Basic Setup */
     /* -------------------------------------------------------------------------- */
-    var stats = new Stats();
-    document.body.appendChild(stats.dom);
     let imgRatio = 640 / 375; //image ratio
+    let imgInitSize = 0.2; //image initial size
     let speed = 0.004; //marching stack speed towards the front
-    let sharkirSize = 0.75; //sharkie sticker size in the center
-    let imgScale = 0.03 //image scale index
+    let imgScale = 0.08 //image scale index
     let mouseX = 0,
         mouseY = 0;
     let windowHalfX = window.innerWidth / 2;
@@ -29,7 +27,7 @@ document.addEventListener("DOMContentLoaded", function() {
     /* -------------------------- three js scene set up ------------------------- */
     const sizes = {
         width: window.innerWidth,
-        height: window.innerWidth * 0.71875
+        height: window.innerWidth * 2.16
     }
 
     const canvas = document.querySelector('canvas.webgl')
@@ -47,9 +45,9 @@ document.addEventListener("DOMContentLoaded", function() {
 
     window.addEventListener('resize', () => {
         sizes.width = window.innerWidth
-        sizes.height = window.innerWidth * 0.71875
+        sizes.height = window.innerWidth * 2.16
         windowHalfX = window.innerWidth / 2;
-        windowHalfY = window.innerWidth * 0.71875 / 2;
+        windowHalfY = window.innerWidth * 2.16 / 2;
         camera.aspect = sizes.width / sizes
             .height
         camera
@@ -72,7 +70,7 @@ document.addEventListener("DOMContentLoaded", function() {
     fadeMaterial = new THREE.MeshBasicMaterial({
         color: 0x000,
         transparent: true,
-        opacity: 0.05
+        opacity: 0.04
     });
     let texture1,
         material1;
@@ -98,39 +96,32 @@ document.addEventListener("DOMContentLoaded", function() {
         .TextureLoader()
         .load('./h4.png');
     material4 = new THREE.MeshBasicMaterial({ map: texture4 });
-    let textureSharkie,
-        materialSharkie,
-        meshSharkie;
-    textureSharkie = new THREE
-        .TextureLoader()
-        .load('./new sharkie.png');
-    materialSharkie = new THREE.MeshBasicMaterial({ map: textureSharkie, transparent: true });
 
     /* ------------------------------ image objects ----------------------------- */
     class MarchingImage {
-        constructor(material, imgRatio, initialZ, speed, id, x, y, imgScale) {
-            this.mesh = new THREE.Mesh(new THREE.PlaneGeometry(0.5 * imgRatio, 0.5), material);
+        constructor(material, imgRatio, initialZ, speed, id, x, y, imgScale, positionx, positiony) {
+            this.mesh = new THREE.Mesh(new THREE.PlaneGeometry(imgInitSize * imgRatio, imgInitSize), material);
             this.id = id;
             this.mesh.position.z = initialZ;
-            this.mesh.position.x = x * .5 + x * .05 * this.id;
-            this.mesh.position.y = y * .3 + y * .03 * this.id;
+            this.mesh.position.x = positionx + x * .05 * this.id;
+            this.mesh.position.y = positiony + y * .02 * this.id;
             this.speed = speed;
             this.movingForward = true;
             this.imgScale = imgScale;
             this.mesh.scale.set(this.imgScale, this.imgScale, this.imgScale)
         }
 
-        updatePosition(x, y) {
+        updatePosition(x, y, positionx, positiony) {
             if (this.movingForward) {
                 this.mesh.position.z += this.speed;
                 this.mesh.position.x += this.speed * x;
-                this.mesh.position.y += this.speed / 5 * 3 * y;
+                this.mesh.position.y += this.speed / 5 * 2 * y;
                 // this.mesh.scale += this.speed / 5 * 
-                this.imgScale += this.speed / 5 * 3;
+                this.imgScale += this.speed / 5 * 8;
             } else {
                 this.mesh.position.z = 0;
-                this.mesh.position.x = x * .5;
-                this.mesh.position.y = y * .3;
+                this.mesh.position.x = positionx;
+                this.mesh.position.y = positiony;
                 this.imgScale = 1;
             }
             this.mesh.scale.set(this.imgScale, this.imgScale, this.imgScale)
@@ -143,7 +134,7 @@ document.addEventListener("DOMContentLoaded", function() {
         }
 
         getPositionZ() {
-            return this.mesh.position.z
+            return this.mesh.position.z;
         }
     }
 
@@ -153,15 +144,15 @@ document.addEventListener("DOMContentLoaded", function() {
     function init() {
         // initial position and the style of the moving image stacks
         for (let i = 0; i < imgcnt; i++) {
-            let image1 = new MarchingImage(material1, imgRatio, i * 0.05, speed, i, -1, -1, imgScale * i + 1);
-            let image3 = new MarchingImage(material3, imgRatio, i * 0.05, speed, i, 1, 1, imgScale * i + 1);
-            let image2 = new MarchingImage(material2, imgRatio, i * 0.05, speed, i, 1, -1, imgScale * i + 1);
-            let image4 = new MarchingImage(material4, imgRatio, i * 0.05, speed, i, -1, 1, imgScale * i + 1);
+            let image1 = new MarchingImage(material1, imgRatio, i * 0.05, speed, i, -1, -1, imgScale * i + 1, 0.38, -0.1);
+            let image2 = new MarchingImage(material2, imgRatio, i * 0.05, speed, i, 1, -1, imgScale * i + 1, -.38, -.65);
+            let image3 = new MarchingImage(material3, imgRatio, i * 0.05, speed, i, -1, 1, imgScale * i + 1, .38, .65);
+            let image4 = new MarchingImage(material4, imgRatio, i * 0.05, speed, i, 1, 1, imgScale * i + 1, -.38, .1);
             let imgGroup = new THREE.Group();
-            imgGroup.add(image1.mesh)
-            imgGroup.add(image2.mesh)
-            imgGroup.add(image3.mesh)
-            imgGroup.add(image4.mesh)
+            imgGroup.add(image1.mesh);
+            imgGroup.add(image2.mesh);
+            imgGroup.add(image3.mesh);
+            imgGroup.add(image4.mesh);
             scene.add(imgGroup);
             imgStack.push(imgGroup);
             images1.push(image1);
@@ -171,15 +162,15 @@ document.addEventListener("DOMContentLoaded", function() {
         }
 
         // initial position and the style of the TOP image stacks
-        let front1 = new THREE.Mesh(new THREE.PlaneGeometry(0.5 * imgRatio, 0.5), material1)
-        let front2 = new THREE.Mesh(new THREE.PlaneGeometry(0.5 * imgRatio, 0.5), material2)
-        let front3 = new THREE.Mesh(new THREE.PlaneGeometry(0.5 * imgRatio, 0.5), material3)
-        let front4 = new THREE.Mesh(new THREE.PlaneGeometry(0.5 * imgRatio, 0.5), material4)
-        front1.position.set(-1, -.6, .51)
-        front2.position.set(1, -.6, .51)
-        front3.position.set(1, .6, .51)
-        front4.position.set(-1, .6, .51)
-        let frontScale = 1 + 0.03 * 10;
+        let front1 = new THREE.Mesh(new THREE.PlaneGeometry(imgInitSize * imgRatio, imgInitSize), material1)
+        let front2 = new THREE.Mesh(new THREE.PlaneGeometry(imgInitSize * imgRatio, imgInitSize), material2)
+        let front3 = new THREE.Mesh(new THREE.PlaneGeometry(imgInitSize * imgRatio, imgInitSize), material3)
+        let front4 = new THREE.Mesh(new THREE.PlaneGeometry(imgInitSize * imgRatio, imgInitSize), material4)
+        front1.position.set(-.12, -.3, .51)
+        front2.position.set(.12, -.85, .51)
+        front3.position.set(-.12, .85, .51)
+        front4.position.set(.12, .3, .51)
+        let frontScale = 1 + 0.08 * 10;
         front1.scale.set(frontScale, frontScale, frontScale)
         front2.scale.set(frontScale, frontScale, frontScale)
         front3.scale.set(frontScale, frontScale, frontScale)
@@ -200,57 +191,78 @@ document.addEventListener("DOMContentLoaded", function() {
         scene.add(fadeMesh);
     }
 
-    // initial position and the style of the center Sharkie
-    meshSharkie = new THREE.Mesh(new THREE.PlaneGeometry(sharkirSize, sharkirSize), materialSharkie)
-    meshSharkie.position.z = .65
-    scene.add(meshSharkie);
-
     /* -------------------------------------------------------------------------- */
     /*                          animation and interaction                         */
     /* -------------------------------------------------------------------------- */
     function animate() {
-        stats.begin();
         requestAnimationFrame(animate);
-
         // update the marching image stacks
         for (let i = 0; i < imgcnt; i++) {
-            images1[i].updatePosition(-1, -1);
-            images2[i].updatePosition(1, -1);
-            images3[i].updatePosition(1, 1);
-            images4[i].updatePosition(-1, 1);
+            images1[i].updatePosition(-1, -1, .38, -.1);
+            images2[i].updatePosition(1, -1, -.38, -.65);
+            images3[i].updatePosition(-1, 1, .38, .65);
+            images4[i].updatePosition(1, 1, -.38, .1);
         }
-
         // update the stacks following the cursor
-        for (let i = 0; i < imgcnt; i++) {
-            let a = images1[i].getPositionZ() / .05
-            imgStack[i].position.x += (-mouseX / 90000 * a - imgStack[i].position.x) * (.005 * a * a + 0.02);
-            imgStack[i].position.y += (mouseY / 90000 * a - imgStack[i].position.y) * (.005 * a * a + 0.02);
-        }
-        // update the TOP stack following the cursor
-        imgStack[10].position.x += (-mouseX / 90000 * 10 - imgStack[10].position.x) * (.005 * 100 + 0.02);
-        imgStack[10].position.y += (mouseY / 90000 * 10 - imgStack[10].position.y) * (.005 * 100 + 0.02);
 
         renderer.render(scene, camera);
-        stats.end();
     }
     init();
     animate();
 
-    document.addEventListener('mousemove', onDocumentMouseMove);
 
-    function onDocumentMouseMove(event) {
-        mouseX = (event.clientX - windowHalfX) * 4;
-        mouseY = (event.clientY - windowHalfY) * 4;
+    /* ------------------------ mobile gyroscope function ----------------------- */
+    const orientationbtn = document.getElementById("orientationbtn");
+    orientationbtn.addEventListener("click", function() {
+        if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+            DeviceMotionEvent.requestPermission().then(permissionState => {
+                if (permissionState === "granted") {
+                    console.log("3")
+                    orientationmove()
+                } else {
+                    orientationbtn.style.display = "none";
+                    console.log("no3")
+                        // document.getElementById("restartindication").style.display = "block"
+                }
+            }).catch(console.error);
+        }
+    });
+
+    function orientationmove() {
+        // if ('DeviceOrientationEvent' in window) {
+        window.addEventListener('deviceorientation', handleOrientation, true);
+
+        function handleOrientation(event) {
+            // Gyroscope data is available in event object
+            // var alpha = event.alpha; // Z-axis rotation
+            // var beta = event.beta; // X-axis rotation
+            // var gamma = event.gamma; // Y-axis rotation
+            mouseY = event.beta - 45;
+            mouseX = event.gamma;
+            for (let i = 0; i < imgcnt; i++) {
+                let a = images1[i].getPositionZ() / .05
+                imgStack[i].position.x += (-mouseX / 3000 * a - imgStack[i].position.x) * (.005 * a * a + 0.02);
+                imgStack[i].position.y += (mouseY / 3000 * a - imgStack[i].position.y) * (.005 * a * a + 0.02);
+            }
+            // update the TOP stack following the cursor
+            imgStack[10].position.x += (-mouseX / 300 - imgStack[10].position.x) * (.005 * 100 + 0.02);
+            imgStack[10].position.y += (mouseY / 300 - imgStack[10].position.y) * (.005 * 100 + 0.02);
+            // console.log("mouseX")
+            // Use the data for your application
+            // For example, update a 3D object's orientation
+        }
+        // mouseX = (event.clientX - windowHalfX) * 4;
+        // mouseY = (event.clientY - windowHalfY) * 4;
+        // } else {
+        //     document.addEventListener('mousemove', onDocumentMouseMove);
+
+        //     function onDocumentMouseMove(event) {
+        //         mouseX = (event.clientX - windowHalfX) * 4;
+        //         mouseY = (event.clientY - windowHalfY) * 4;
+        //     }
+        // }
     }
 
-    document.addEventListener("mousemove", (event) => {
-        const cursorPosition = new THREE.Vector3(
-            (event.clientX / window.innerWidth) * 3 - 1, -((event.clientY / window.innerHeight) * 3 - 1),
-            0.5
-        );
-        cursorPosition.unproject(camera);
-        meshSharkie.lookAt(cursorPosition);
-    });
 
     /* ----------------------- subpage link to the images ----------------------- */
     const subPage1 = document.getElementById("subPage1");
@@ -273,5 +285,4 @@ document.addEventListener("DOMContentLoaded", function() {
     subPage4.addEventListener("click", function() {
         window.open(externalLink4, "_blank");
     });
-
 });
