@@ -4,82 +4,29 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import Stats from 'stats-js';
 document.addEventListener("DOMContentLoaded", function() {
-    var stats = new Stats();
-    document.body.appendChild(stats.dom);
-
-    // const scontent = ['IMMERSIVE WORLDS', 'GAMING ENVIRONMENTS', 'CONTENT CREATION', 'FOOD & BEVERAGE'];
-    // const scontentcss = ['titleStyle1', 'titleStyle2', 'titleStyle3', 'titleStyle4'];
-    // for (let i = 0; i < scontent.length; i++) {
-    //     let exploreTitles = document.createElement('div');
-    //     exploreTitles.textContent = scontent[i];
-    //     exploreTitles
-    //         .classList
-    //         .add("title")
-    //     exploreTitles.setAttribute('id', scontentcss[i]);
-    //     document
-    //         .body
-    //         .appendChild(exploreTitles);
-    // }
 
 
     /* -------------------------------------------------------------------------- */
     /* Basic Setup */
     /* -------------------------------------------------------------------------- */
-    let imgRatio = 640 / 375;
-    let speed = 0.004;
-    let sharkirSize = 0.75;
-    let imgScale = 0.04
-        // let isMobileDevice = isMobile(window.navigator).any;
+    var stats = new Stats();
+    document.body.appendChild(stats.dom);
+    let imgRatio = 640 / 375; //image ratio
+    let speed = 0.004; //marching stack speed towards the front
+    let sharkirSize = 0.75; //sharkie sticker size in the center
+    let imgScale = 0.03 //image scale index
     let mouseX = 0,
         mouseY = 0;
     let windowHalfX = window.innerWidth / 2;
     let windowHalfY = window.innerHeight / 2;
-    let fadeMaterial,
-        fadeMesh;
-    let texture1,
-        material1;
-    let texture2,
-        material2;
-    let texture3,
-        material3;
-    let texture4,
-        material4;
+    let imgcnt = 10; //per stack image amount
+    let images1 = []; //per stack is a array of 10 images 
+    let images2 = []; //per stack is a array of 10 images 
+    let images3 = []; //per stack is a array of 10 images 
+    let images4 = []; //per stack is a array of 10 images 
+    let imgStack = []; // imgStack is the array of 11 layers, per layer has 4 images, 10 of 11 are the marching images and a top layer stay on top
 
-
-
-    let imgcnt = 10;
-
-    texture1 = new THREE
-        .TextureLoader()
-        .load('./h1.png');
-    material1 = new THREE.MeshBasicMaterial({ map: texture1 });
-    texture2 = new THREE
-        .TextureLoader()
-        .load('./h2.png');
-    material2 = new THREE.MeshBasicMaterial({ map: texture2 });
-    texture3 = new THREE
-        .TextureLoader()
-        .load('./h3.png');
-    material3 = new THREE.MeshBasicMaterial({ map: texture3 });
-    texture4 = new THREE
-        .TextureLoader()
-        .load('./h4.png');
-    material4 = new THREE.MeshBasicMaterial({ map: texture4 });
-
-    fadeMaterial = new THREE.MeshBasicMaterial({
-        color: 0x000,
-        transparent: true,
-        opacity: 0.05
-    });
-
-    let textureSharkie,
-        materialSharkie,
-        meshSharkie;
-    textureSharkie = new THREE
-        .TextureLoader()
-        .load('./new sharkie.png');
-    materialSharkie = new THREE.MeshBasicMaterial({ map: textureSharkie, transparent: true });
-
+    /* -------------------------- three js scene set up ------------------------- */
     const sizes = {
         width: window.innerWidth,
         height: window.innerWidth * 0.71875
@@ -119,6 +66,47 @@ document.addEventListener("DOMContentLoaded", function() {
     // const controls = new OrbitControls(camera, renderer.domElement);
 
 
+    /* ---------------------------- declare materials --------------------------- */
+    let fadeMaterial,
+        fadeMesh;
+    fadeMaterial = new THREE.MeshBasicMaterial({
+        color: 0x000,
+        transparent: true,
+        opacity: 0.05
+    });
+    let texture1,
+        material1;
+    let texture2,
+        material2;
+    let texture3,
+        material3;
+    let texture4,
+        material4;
+    texture1 = new THREE
+        .TextureLoader()
+        .load('./h1.png');
+    material1 = new THREE.MeshBasicMaterial({ map: texture1 });
+    texture2 = new THREE
+        .TextureLoader()
+        .load('./h2.png');
+    material2 = new THREE.MeshBasicMaterial({ map: texture2 });
+    texture3 = new THREE
+        .TextureLoader()
+        .load('./h3.png');
+    material3 = new THREE.MeshBasicMaterial({ map: texture3 });
+    texture4 = new THREE
+        .TextureLoader()
+        .load('./h4.png');
+    material4 = new THREE.MeshBasicMaterial({ map: texture4 });
+    let textureSharkie,
+        materialSharkie,
+        meshSharkie;
+    textureSharkie = new THREE
+        .TextureLoader()
+        .load('./new sharkie.png');
+    materialSharkie = new THREE.MeshBasicMaterial({ map: textureSharkie, transparent: true });
+
+    /* ------------------------------ image objects ----------------------------- */
     class MarchingImage {
         constructor(material, imgRatio, initialZ, speed, id, x, y, imgScale) {
             this.mesh = new THREE.Mesh(new THREE.PlaneGeometry(0.5 * imgRatio, 0.5), material);
@@ -126,7 +114,6 @@ document.addEventListener("DOMContentLoaded", function() {
             this.mesh.position.z = initialZ;
             this.mesh.position.x = x * .5 + x * .05 * this.id;
             this.mesh.position.y = y * .3 + y * .03 * this.id;
-            // this.mesh.scale.set(imgScale, imgScale, imgScale);
             this.speed = speed;
             this.movingForward = true;
             this.imgScale = imgScale;
@@ -153,23 +140,18 @@ document.addEventListener("DOMContentLoaded", function() {
             } else {
                 this.movingForward = true;
             }
-
-
         }
+
         getPositionZ() {
             return this.mesh.position.z
         }
-
     }
 
-    let images1 = [];
-    let images2 = [];
-    let images3 = [];
-    let images4 = [];
-    let imgStack = [];
-
+    /* -------------------------------------------------------------------------- */
+    /*                             initialize                                     */
+    /* -------------------------------------------------------------------------- */
     function init() {
-
+        // initial position and the style of the moving image stacks
         for (let i = 0; i < imgcnt; i++) {
             let image1 = new MarchingImage(material1, imgRatio, i * 0.05, speed, i, -1, -1, imgScale * i + 1);
             let image3 = new MarchingImage(material3, imgRatio, i * 0.05, speed, i, 1, 1, imgScale * i + 1);
@@ -188,7 +170,7 @@ document.addEventListener("DOMContentLoaded", function() {
             images4.push(image4);
         }
 
-
+        // initial position and the style of the TOP image stacks
         let front1 = new THREE.Mesh(new THREE.PlaneGeometry(0.5 * imgRatio, 0.5), material1)
         let front2 = new THREE.Mesh(new THREE.PlaneGeometry(0.5 * imgRatio, 0.5), material2)
         let front3 = new THREE.Mesh(new THREE.PlaneGeometry(0.5 * imgRatio, 0.5), material3)
@@ -211,20 +193,26 @@ document.addEventListener("DOMContentLoaded", function() {
         scene.add(imgGroup);
     }
 
+    // initial position and the style of the fading effect
     for (let i = 0; i < imgcnt * 10; i++) {
         fadeMesh = new THREE.Mesh(new THREE.PlaneGeometry(3, 3), fadeMaterial);
         fadeMesh.position.z = i * .05 / 10 - 0.1;
         scene.add(fadeMesh);
     }
 
+    // initial position and the style of the center Sharkie
     meshSharkie = new THREE.Mesh(new THREE.PlaneGeometry(sharkirSize, sharkirSize), materialSharkie)
     meshSharkie.position.z = .65
     scene.add(meshSharkie);
 
+    /* -------------------------------------------------------------------------- */
+    /*                          animation and interaction                         */
+    /* -------------------------------------------------------------------------- */
     function animate() {
         stats.begin();
         requestAnimationFrame(animate);
 
+        // update the marching image stacks
         for (let i = 0; i < imgcnt; i++) {
             images1[i].updatePosition(-1, -1);
             images2[i].updatePosition(1, -1);
@@ -232,17 +220,13 @@ document.addEventListener("DOMContentLoaded", function() {
             images4[i].updatePosition(-1, 1);
         }
 
-        // for (let i = 0; i < (imgcnt + 1); i++) {
-
+        // update the stacks following the cursor
         for (let i = 0; i < imgcnt; i++) {
             let a = images1[i].getPositionZ() / .05
-                // images2[i].getPositionZ();
-                // images3[i].getPositionZ();
-                // images4[i].getPositionZ();
             imgStack[i].position.x += (-mouseX / 90000 * a - imgStack[i].position.x) * (.005 * a * a + 0.02);
             imgStack[i].position.y += (mouseY / 90000 * a - imgStack[i].position.y) * (.005 * a * a + 0.02);
-
         }
+        // update the TOP stack following the cursor
         imgStack[10].position.x += (-mouseX / 90000 * 10 - imgStack[10].position.x) * (.005 * 100 + 0.02);
         imgStack[10].position.y += (mouseY / 90000 * 10 - imgStack[10].position.y) * (.005 * 100 + 0.02);
 
@@ -268,7 +252,7 @@ document.addEventListener("DOMContentLoaded", function() {
         meshSharkie.lookAt(cursorPosition);
     });
 
-
+    /* ----------------------- subpage link to the images ----------------------- */
     const subPage1 = document.getElementById("subPage1");
     const subPage2 = document.getElementById("subPage2");
     const subPage3 = document.getElementById("subPage3");
