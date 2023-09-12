@@ -1,0 +1,83 @@
+@import "bootstrap/scss/bootstrap";
+@font-face {
+    font-family: "bold";
+    src: url("../public/font.ttf") format("truetype");
+}
+
+body,
+html {
+    margin: 0;
+    padding: 0;
+}
+
+// .webgl {
+//     width: 100vw;
+//     height: 71.875vw;
+// }
+.title {
+    width: 45vw;
+    line-height: 110%;
+    font-family: "bold";
+    font-size: 3.5vw;
+    z-index: 3;
+    color: #fff;
+    position: absolute;
+}
+
+#titleStyle1 {
+    left: 1.2vw;
+    top: 1.2vw;
+}
+
+#titleStyle2 {
+    right: 1.2vw;
+    text-align: right;
+    top: 1.2vw;
+}
+
+#titleStyle3 {
+    left: 1.2vw;
+    top: 63.5vw;
+}
+
+#titleStyle4 {
+    right: 1.2vw;
+    text-align: right;
+    top: 63.5vw;
+}
+
+#bgimage {
+    width: 100%;
+    position: absolute;
+    left: 0px;
+    top: 10px;
+    z-index: -1;
+}
+
+.subpages {
+    position: absolute;
+    z-index: 5;
+    width: 40vw;
+    height: 28.726vw;
+    cursor: pointer;
+}
+
+#subPage1 {
+    top: 0px;
+    left: 0px;
+}
+
+#subPage2 {
+    top: 0px;
+    right: 0px;
+}
+
+#subPage3 {
+    top: 43.149vw;
+    right: 0px;
+}
+
+#subPage4 {
+    top: 43.149vw;
+    left: 0px;
+}
